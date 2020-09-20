@@ -16,4 +16,12 @@ class InvoiceService(private val dal: AntaeusDal) {
     fun fetch(id: Int): Invoice {
         return dal.fetchInvoice(id) ?: throw InvoiceNotFoundException(id)
     }
+
+    fun markAsPaid(id: Int): Invoice {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    fun fetchPendingInvoices(): List<Invoice> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
