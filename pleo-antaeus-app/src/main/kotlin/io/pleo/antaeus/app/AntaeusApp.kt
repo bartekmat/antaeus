@@ -9,6 +9,7 @@ package io.pleo.antaeus.app
 
 import getPaymentProvider
 import io.pleo.antaeus.core.handlers.BillingExceptionHandler
+import io.pleo.antaeus.core.schedulers.RecurringTaskScheduler
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
@@ -25,6 +26,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import setupInitialData
 import java.io.File
 import java.sql.Connection
+import java.util.function.Supplier
 
 fun main() {
     // The tables to create in the database.
@@ -66,6 +68,12 @@ fun main() {
 
     // This is _your_ billing service to be included where you see fit
     val billingService = BillingService(paymentProvider = paymentProvider, invoiceService = invoiceService, handler = billingExceptionHandler)
+
+    //Create task schedulers
+    val recurringTaskScheduler = RecurringTaskScheduler()
+
+    //Schedule recurring tasks
+    recurringTaskScheduler.scheduleMonthly(Supplier { billingService.proceedAllPendingInvoices() })
 
     // Create REST web service
     AntaeusRest(
