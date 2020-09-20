@@ -7,20 +7,20 @@ import org.quartz.impl.StdSchedulerFactory
 import java.util.function.Supplier
 
 class RecurringTaskScheduler (
-        private val scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler()
+        private val scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler(),
+        private val cron: CronScheduleBuilder? = CronScheduleBuilder.monthlyOnDayAndHourAndMinute(1,0,0),
+        private val job: JobDetail = newJob(RecurringTask::class.java).withIdentity("monthlyTask", "group1").build()
 ) {
     fun scheduleMonthly(function: Supplier<Unit>) {
         scheduler.start()
-
-        val job: JobDetail = newJob(RecurringTask::class.java).withIdentity("monthlyTask", "group1").build()
 
         val jobDataMap = JobDataMap()
         jobDataMap["function"] = function
 
         val trigger: Trigger = TriggerBuilder.newTrigger()
                 .withIdentity("monthlyTrigger")
-                //.withSchedule(CronScheduleBuilder.monthlyOnDayAndHourAndMinute(1,0,0))
-                .withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * 1/1 * ? *"))
+                .withSchedule(cron)
+                //for manual testing - every minute .withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * 1/1 * ? *"))
                 .usingJobData(jobDataMap)
                 .forJob(job)
                 .build()
