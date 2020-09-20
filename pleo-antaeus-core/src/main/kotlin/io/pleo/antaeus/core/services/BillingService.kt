@@ -1,11 +1,13 @@
 package io.pleo.antaeus.core.services
 
 import io.pleo.antaeus.core.external.PaymentProvider
+import io.pleo.antaeus.core.handlers.BillingExceptionHandler
 import io.pleo.antaeus.models.Invoice
 
 class BillingService(
         private val paymentProvider: PaymentProvider,
-        private val invoiceService: InvoiceService
+        private val invoiceService: InvoiceService,
+        private val handler: BillingExceptionHandler
 ) {
     // TODO - Add code e.g. here
     fun proceedAllPendingInvoices() {
@@ -26,7 +28,7 @@ class BillingService(
         try {
             return paymentProvider.charge(invoice)
         } catch (exception: Exception) {
-
+            handler.handleException(exception)
         }
         return false
     }
