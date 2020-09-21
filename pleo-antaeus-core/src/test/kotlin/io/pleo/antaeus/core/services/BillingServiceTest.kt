@@ -1,6 +1,9 @@
 package io.pleo.antaeus.core.services
 
-import io.mockk.*
+import io.mockk.CapturingSlot
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.handlers.InvoiceCorrector
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.*
 
 class BillingServiceTest {
     //testData
@@ -24,9 +28,9 @@ class BillingServiceTest {
         every { charge(noProblemInvoice) } returns true
         every { charge(problemInvoice) } returns false
     }
-    private val invoiceCorrector = mockk<InvoiceCorrector>{
-        every { getCorrectCopy(noProblemInvoice) } returns noProblemInvoice
-        every { getCorrectCopy(problemInvoice) } returns noProblemInvoice
+    private val invoiceCorrector = mockk<InvoiceCorrector> {
+        every { getCorrectCopy(noProblemInvoice) } returns Optional.of(noProblemInvoice)
+        every { getCorrectCopy(problemInvoice) } returns Optional.of(noProblemInvoice)
     }
     //mock injection
     val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector)
