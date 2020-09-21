@@ -2,12 +2,10 @@ package io.pleo.antaeus.core.services
 
 import io.mockk.every
 import io.mockk.mockk
+import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
 import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
-import io.pleo.antaeus.models.Currency
-import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
-import io.pleo.antaeus.models.Money
+import io.pleo.antaeus.models.*
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -64,5 +62,27 @@ class InvoiceServiceTest {
         val invoiceService = InvoiceService(dal = dal)
 
         assertTrue(invoiceService.fetchPendingInvoices().isEmpty())
+    }
+
+    @Test
+    fun `will return invoice if saved successfully`() {
+        val dal = mockk<AntaeusDal> {
+            every { createInvoice(any(), any()) } returns existingInvoice
+        }
+        val invoiceService = InvoiceService(dal = dal)
+        //when
+        val created = invoiceService.create(Money(BigDecimal.ONE, Currency.DKK), Customer(1, Currency.DKK))
+        assertTrue(created.equals(existingInvoice))
+    }
+
+    @Test
+    fun `will throw if saving fails`() {
+        val dal = mockk<AntaeusDal> {
+            every { createInvoice(any(), any()) } returns null
+        }
+        val invoiceService = InvoiceService(dal = dal)
+        assertThrows<CustomerNotFoundException> {
+            invoiceService.create(Money(BigDecimal.ONE, Currency.DKK), Customer(1, Currency.DKK))
+        }
     }
 }
