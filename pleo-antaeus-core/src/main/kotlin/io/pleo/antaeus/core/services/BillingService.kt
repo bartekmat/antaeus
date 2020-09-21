@@ -1,9 +1,11 @@
 package io.pleo.antaeus.core.services
 
+import io.pleo.antaeus.core.commands.RetryableCommand
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.handlers.BillingExceptionHandler
 import io.pleo.antaeus.core.logger.Logger
 import io.pleo.antaeus.models.Invoice
+import java.util.function.Supplier
 
 class BillingService(
         private val paymentProvider: PaymentProvider,
@@ -28,7 +30,8 @@ class BillingService(
 
     private fun chargeInvoice(invoice: Invoice): Boolean {
         try {
-            val success = paymentProvider.charge(invoice)
+            val success = RetryableCommand<Boolean>(maxRetries = 3)
+                    .run(Supplier { paymentProvider.charge(invoice) })
             if (!success){
                 handleNoMoney(invoice.id)
                 return false
