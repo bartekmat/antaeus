@@ -3,6 +3,7 @@ package io.pleo.antaeus.core.commands
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.MultipleTryFailedException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import org.junit.jupiter.api.Test
@@ -56,11 +57,20 @@ class RetryableCommandTest {
 
     @Test
     fun `will throw if exceedes number of tries`() {
-
         val function = mockk<Supplier<Boolean>>() {
             every { get() } throws NetworkException()
         }
         assertThrows<MultipleTryFailedException> {
+            command.run(function)
+            verify(exactly = 4) { function.get() }
+        }
+    }
+    @Test
+    fun `will throw if currency mismatch is thrown`() {
+        val function = mockk<Supplier<Boolean>>() {
+            every { get() } throws CurrencyMismatchException(1,1)
+        }
+        assertThrows<CurrencyMismatchException> {
             command.run(function)
         }
     }
