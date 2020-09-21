@@ -65,31 +65,4 @@ class InvoiceServiceTest {
 
         assertTrue(invoiceService.fetchPendingInvoices().isEmpty())
     }
-
-    @Test
-    fun `will set status to paid`(){
-        val dal = mockk<AntaeusDal> {
-            every { updateInvoice(any(), InvoiceStatus.PAID) } returns paidInvoice
-        }
-
-        val invoiceService = InvoiceService(dal = dal)
-
-        assertTrue{
-            invoiceService.markAsPaid(1).status.equals(InvoiceStatus.PAID)
-        }
-    }
-
-    @Test
-    fun `will throw if invoice to be marked as paid does not exist`(){
-        val dal = mockk<AntaeusDal> {
-            every { updateInvoice(any(), InvoiceStatus.PAID) } returns null
-        }
-
-        val invoiceService = InvoiceService(dal = dal)
-
-        assertThrows<InvoiceNotFoundException> {
-            invoiceService.markAsPaid(1)
-        }
-    }
-
 }

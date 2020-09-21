@@ -1,6 +1,6 @@
 package io.pleo.antaeus.core.commands
 
-import io.pleo.antaeus.core.exceptions.MultipleTryFailedException
+import io.pleo.antaeus.core.exceptions.MultipleNetworkException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.logger.Logger
 import java.util.function.Supplier
@@ -27,6 +27,6 @@ class RetryableCommand<T>(
                 Logger.log.error { "Task unsuccessful due to network exception - " + tryCounter + " try failed" }
             }
         }
-        throw MultipleTryFailedException()
+        throw MultipleNetworkException()
     }
 }

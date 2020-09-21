@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
-import io.pleo.antaeus.core.exceptions.MultipleTryFailedException
+import io.pleo.antaeus.core.exceptions.MultipleNetworkException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -60,7 +60,7 @@ class RetryableCommandTest {
         val function = mockk<Supplier<Boolean>>() {
             every { get() } throws NetworkException()
         }
-        assertThrows<MultipleTryFailedException> {
+        assertThrows<MultipleNetworkException> {
             command.run(function)
             verify(exactly = 4) { function.get() }
         }
