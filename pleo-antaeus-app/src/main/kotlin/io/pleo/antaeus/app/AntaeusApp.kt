@@ -9,6 +9,7 @@ package io.pleo.antaeus.app
 
 import getPaymentProvider
 import io.pleo.antaeus.core.handlers.BillingExceptionHandler
+import io.pleo.antaeus.core.handlers.CurrencyMismatchHandler
 import io.pleo.antaeus.core.schedulers.RecurringTaskScheduler
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
@@ -64,7 +65,8 @@ fun main() {
     val customerService = CustomerService(dal = dal)
 
     //Create exception handlers
-    val billingExceptionHandler = BillingExceptionHandler()
+    val currencyMismatchHandler = CurrencyMismatchHandler()
+    val billingExceptionHandler = BillingExceptionHandler(invoiceService = invoiceService, currencyMismatchHandler = currencyMismatchHandler)
 
     // This is _your_ billing service to be included where you see fit
     val billingService = BillingService(paymentProvider = paymentProvider, invoiceService = invoiceService, handler = billingExceptionHandler)

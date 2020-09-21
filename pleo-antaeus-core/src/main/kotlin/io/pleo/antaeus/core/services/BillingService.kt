@@ -23,7 +23,7 @@ class BillingService(
         val charged: Boolean = chargeInvoice(invoice)
         if (charged) {
             invoiceService.markAsPaid(invoice.id)
-            Logger.log.info { "Invoice "+invoice.id+" successfully charged" }
+            Logger.log.info { "Invoice " + invoice.id + " successfully charged" }
         }
         return charged
     }
@@ -32,19 +32,14 @@ class BillingService(
         try {
             val success = RetryableCommand<Boolean>(maxRetries = 3)
                     .run(Supplier { paymentProvider.charge(invoice) })
-            if (!success){
-                handleNoMoney(invoice.id)
+            if (!success) {
+                handler.handleNoMoney(invoice.id)
                 return false
             }
         } catch (exception: Exception) {
-           handler.handleException(exception)
+            handler.handleException(exception,invoice.id)
             return false
         }
         return true
-    }
-
-    private fun handleNoMoney(id: Int) {
-         //TODO: implement handling of this situation - log and pass to external service
-        Logger.log.info { "Not managed to charge invoice $id , customer account balance did not allow the charge" }
     }
 }
