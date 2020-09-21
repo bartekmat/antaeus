@@ -1,35 +1,36 @@
 package io.pleo.antaeus.core.services
 
 import io.pleo.antaeus.core.commands.RetryableCommand
-import io.pleo.antaeus.core.exceptions.*
+import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
+import io.pleo.antaeus.core.exceptions.EntityNotFoundException
+import io.pleo.antaeus.core.exceptions.MultipleNetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.handlers.InvoiceCorrector
 import io.pleo.antaeus.core.logger.Logger
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
-import java.util.*
 import java.util.function.Supplier
 
 class BillingService(
         private val paymentProvider: PaymentProvider,
         private val invoiceCorrector: InvoiceCorrector
 ) {
-    // TODO - Add code e.g. here
+
     fun proceedAllPendingInvoices(invoices: List<Invoice>) {
         invoices.forEach { proceedSingleInvoice(it) }
-        //here instead of iterating and fired they should be iterated and put on the queue
+        //TODO: here instead of iterating and fired they should be iterated and put on the queue
     }
 
     fun proceedSingleInvoice(invoice: Invoice): Boolean {
         val charged: Boolean = chargeInvoice(invoice)
         if (charged) {
             invoice.status = InvoiceStatus.PAID
-            Logger.log.info { "Invoice " + invoice.id + " successfully charged "+ invoice.amount.value.toInt() + " " + invoice.amount.currency}
+            Logger.log.info { "Invoice " + invoice.id + " successfully charged " + invoice.amount.value.toInt() + " " + invoice.amount.currency }
         }
         return charged
     }
 
-    fun chargeInvoice(invoice: Invoice): Boolean {
+    private fun chargeInvoice(invoice: Invoice): Boolean {
         try {
             val success = RetryableCommand<Boolean>(maxRetries = 3)
                     .run(Supplier {
@@ -46,7 +47,7 @@ class BillingService(
         return true
     }
 
-    fun handleException(exception: Exception, invoice: Invoice) {
+    private fun handleException(exception: Exception, invoice: Invoice) {
         when (exception) {
             is MultipleNetworkException -> handleFailedRetry(invoice)
             is EntityNotFoundException -> handleNoCustomerFound(invoice)
@@ -63,8 +64,11 @@ class BillingService(
     private fun handleCurrencyMismatch(invoice: Invoice) {
         Logger.log.info { "Invoice ${invoice.id} has currency mismatch. Fallback - cancel > evaluate > prepare new" }
         invoice.status = InvoiceStatus.FAILED
-        val correctOne = invoiceCorrector.getCorrectCopy(invoice)
-        proceedSingleInvoice(correctOne)
+        val correctedInvoice= invoiceCorrector.getCorrectCopy(invoice)
+        if (correctedInvoice.isPresent){
+            proceedSingleInvoice(correctedInvoice.get())
+        }
+        //TODO: here we could not execute despite several tries - pass to external service to check
     }
 
     private fun handleNoCustomerFound(invoice: Invoice) {
@@ -73,7 +77,7 @@ class BillingService(
         //TODO: invoice is invalid, customer does not exist, no way to find him - call external service to proceed with the situation
     }
 
-    fun handleNoMoney(invoice: Invoice) {
+    private fun handleNoMoney(invoice: Invoice) {
         Logger.log.info { "Not managed to charge invoice ${invoice.id} , customer account balance did not allow the charge" }
         invoice.status = InvoiceStatus.CUSTOMER_HAD_NO_MONEY
         //TODO: external service can suspend subscription and/or send email to customer - call external service
