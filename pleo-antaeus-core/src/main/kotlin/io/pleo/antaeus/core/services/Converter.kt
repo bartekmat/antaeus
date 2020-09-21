@@ -1,6 +1,7 @@
-package io.pleo.antaeus.core.handlers
+package io.pleo.antaeus.core.services
 
 import io.pleo.antaeus.core.logger.Logger
+import io.pleo.antaeus.core.services.CurrencyRatesProvider
 import io.pleo.antaeus.models.Currency
 import java.math.BigDecimal
 import java.util.*

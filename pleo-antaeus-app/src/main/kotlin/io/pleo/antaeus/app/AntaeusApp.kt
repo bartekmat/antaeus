@@ -8,9 +8,9 @@
 package io.pleo.antaeus.app
 
 import getPaymentProvider
-import io.pleo.antaeus.core.handlers.Converter
-import io.pleo.antaeus.core.handlers.CurrencyRatesProvider
-import io.pleo.antaeus.core.handlers.InvoiceCorrector
+import io.pleo.antaeus.core.services.Converter
+import io.pleo.antaeus.core.services.CurrencyRatesProvider
+import io.pleo.antaeus.core.services.InvoiceCorrector
 import io.pleo.antaeus.core.schedulers.RecurringTaskScheduler
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService

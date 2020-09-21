@@ -1,4 +1,4 @@
-package io.pleo.antaeus.core.handlers
+package io.pleo.antaeus.core.services
 
 import com.google.gson.GsonBuilder
 import io.pleo.antaeus.models.Currencies

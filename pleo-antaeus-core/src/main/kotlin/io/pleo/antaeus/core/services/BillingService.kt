@@ -5,7 +5,6 @@ import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.EntityNotFoundException
 import io.pleo.antaeus.core.exceptions.MultipleNetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
-import io.pleo.antaeus.core.handlers.InvoiceCorrector
 import io.pleo.antaeus.core.logger.Logger
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus

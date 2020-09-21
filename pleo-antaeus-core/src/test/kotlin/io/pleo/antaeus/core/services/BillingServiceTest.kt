@@ -6,7 +6,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.external.PaymentProvider
-import io.pleo.antaeus.core.handlers.InvoiceCorrector
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus

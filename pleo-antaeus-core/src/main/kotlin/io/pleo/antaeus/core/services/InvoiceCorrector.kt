@@ -1,7 +1,5 @@
-package io.pleo.antaeus.core.handlers
+package io.pleo.antaeus.core.services
 
-import io.pleo.antaeus.core.services.CustomerService
-import io.pleo.antaeus.core.services.InvoiceService
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.Money
 import java.util.*
