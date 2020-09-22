@@ -69,7 +69,7 @@ fun main() {
     val ratesProvider = CurrencyRatesProvider()
     val converter = Converter(ratesProvider = ratesProvider)
     val invoiceCorrector = InvoiceCorrector(invoiceService = invoiceService, customerService = customerService, converter = converter)
-    val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector)
+    val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
     val taskCreator = TaskCreator(billingService = billingService, invoiceService = invoiceService)
 
     //Create task schedulers

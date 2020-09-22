@@ -31,12 +31,15 @@ class BillingServiceTest {
         every { getCorrectCopy(noProblemInvoice) } returns Optional.of(noProblemInvoice)
         every { getCorrectCopy(problemInvoice) } returns Optional.of(noProblemInvoice)
     }
-    //mock injection
-    val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector)
 
     //Tests
     @Test
     fun `will return true if payment goes through`() {
+        val invoiceService = mockk<InvoiceService>{
+            every { updateStatus(any(), any()) } returns noProblemInvoice
+        }
+        //mock injection
+        val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
 
         assertTrue {
             billingService.proceedSingleInvoice(noProblemInvoice)
@@ -46,6 +49,12 @@ class BillingServiceTest {
 
     @Test
     fun `will return false if payment fails due to account balance`() {
+        val invoiceService = mockk<InvoiceService>{
+            every { updateStatus(any(), any()) } returns problemInvoice
+        }
+        //mock injection
+        val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
+
 
         assertFalse {
             billingService.proceedSingleInvoice(problemInvoice)
@@ -59,8 +68,12 @@ class BillingServiceTest {
         val provider = mockk<PaymentProvider> {
             every { charge(problemInvoice) } throws CurrencyMismatchException(1, 1)
         }
+        val invoiceService = mockk<InvoiceService>{
+            every { updateStatus(any(), any()) } returns problemInvoice
+        }
         //mock injection
-        val billingService = BillingService(paymentProvider = provider, invoiceCorrector = invoiceCorrector)
+        val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
+
         //when
         billingService.proceedSingleInvoice(problemInvoice)
         verify(atLeast = 1) { invoiceCorrector.getCorrectCopy(any()) }

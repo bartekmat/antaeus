@@ -11,6 +11,7 @@ import io.pleo.antaeus.models.InvoiceStatus
 import java.util.function.Supplier
 
 class BillingService(
+        private val invoiceService: InvoiceService,
         private val paymentProvider: PaymentProvider,
         private val invoiceCorrector: InvoiceCorrector
 ) {
@@ -23,7 +24,7 @@ class BillingService(
     fun proceedSingleInvoice(invoice: Invoice): Boolean {
         val charged: Boolean = chargeInvoice(invoice)
         if (charged) {
-            invoice.status = InvoiceStatus.PAID
+            invoiceService.updateStatus(invoice.id, InvoiceStatus.PAID)
             Logger.log.info { "Invoice " + invoice.id + " successfully charged " + invoice.amount.value.toInt() + " " + invoice.amount.currency }
         }
         return charged
@@ -36,49 +37,49 @@ class BillingService(
                         paymentProvider.charge(invoice)
                     })
             if (!success) {
-                handleNoMoney(invoice)
+                handleNoMoney(invoice.id)
                 return false
             }
         } catch (exception: Exception) {
-            handleException(exception, invoice)
+            handleException(exception, invoice.id)
             return false
         }
         return true
     }
 
-    private fun handleException(exception: Exception, invoice: Invoice) {
+    private fun handleException(exception: Exception, id: Int) {
         when (exception) {
-            is MultipleNetworkException -> handleFailedRetry(invoice)
-            is EntityNotFoundException -> handleNoCustomerFound(invoice)
-            is CurrencyMismatchException -> handleCurrencyMismatch(invoice)
+            is MultipleNetworkException -> handleFailedRetry(id)
+            is EntityNotFoundException -> handleNoCustomerFound(id)
+            is CurrencyMismatchException -> handleCurrencyMismatch(id)
         }
     }
 
-    private fun handleFailedRetry(invoice: Invoice) {
+    private fun handleFailedRetry(id: Int) {
         Logger.log.info { "failed to proceed - retry number exceeded" }
-        invoice.status = InvoiceStatus.FAILED
+        invoiceService.updateStatus(id, InvoiceStatus.FAILED)
         //TODO: here we could not execute despite several tries - pass to external service to check/reschedule
     }
 
-    private fun handleCurrencyMismatch(invoice: Invoice) {
-        Logger.log.info { "Invoice ${invoice.id} has currency mismatch. Fallback - cancel > evaluate > prepare new" }
-        invoice.status = InvoiceStatus.FAILED
-        val correctedInvoice= invoiceCorrector.getCorrectCopy(invoice)
+    private fun handleCurrencyMismatch(id: Int) {
+        Logger.log.info { "Invoice $id has currency mismatch. Fallback - cancel > evaluate > prepare new" }
+        val wrongInvoice = invoiceService.updateStatus(id, InvoiceStatus.FAILED)
+        val correctedInvoice= invoiceCorrector.getCorrectCopy(wrongInvoice)
         if (correctedInvoice.isPresent){
             proceedSingleInvoice(correctedInvoice.get())
         }
         //TODO: here we could not execute despite several tries - pass to external service to check
     }
 
-    private fun handleNoCustomerFound(invoice: Invoice) {
-        Logger.log.info { "Invoice ${invoice.id} not proceeded, such customer was not found in DB" }
-        invoice.status = InvoiceStatus.FAILED
+    private fun handleNoCustomerFound(id: Int) {
+        Logger.log.info { "Invoice $id not proceeded, such customer was not found in DB" }
+        invoiceService.updateStatus(id, InvoiceStatus.FAILED)
         //TODO: invoice is invalid, customer does not exist, no way to find him - call external service to proceed with the situation
     }
 
-    private fun handleNoMoney(invoice: Invoice) {
-        Logger.log.info { "Not managed to charge invoice ${invoice.id} , customer account balance did not allow the charge" }
-        invoice.status = InvoiceStatus.CUSTOMER_HAD_NO_MONEY
+    private fun handleNoMoney(id: Int) {
+        Logger.log.info { "Not managed to charge invoice $id , customer account balance did not allow the charge" }
+        invoiceService.updateStatus(id, InvoiceStatus.CUSTOMER_HAD_NO_MONEY)
         //TODO: external service can suspend subscription and/or send email to customer - call external service
     }
 }
