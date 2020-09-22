@@ -8,13 +8,8 @@
 package io.pleo.antaeus.app
 
 import getPaymentProvider
-import io.pleo.antaeus.core.services.Converter
-import io.pleo.antaeus.core.services.CurrencyRatesProvider
-import io.pleo.antaeus.core.services.InvoiceCorrector
 import io.pleo.antaeus.core.schedulers.RecurringTaskScheduler
-import io.pleo.antaeus.core.services.BillingService
-import io.pleo.antaeus.core.services.CustomerService
-import io.pleo.antaeus.core.services.InvoiceService
+import io.pleo.antaeus.core.services.*
 import io.pleo.antaeus.core.tasks.TaskCreator
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.CustomerTable
@@ -66,9 +61,10 @@ fun main() {
     val customerService = CustomerService(dal = dal)
 
     //Create additional services
-    val ratesProvider = CurrencyRatesProvider()
-    val converter = Converter(ratesProvider = ratesProvider)
-    val invoiceCorrector = InvoiceCorrector(invoiceService = invoiceService, customerService = customerService, converter = converter)
+    val freaksApi = CurrencyFreaksApi()
+    val ratesProvider = CurrencyRateProvider(api = freaksApi)
+    val converter = CurrencyConverter(rateProvider = ratesProvider)
+    val invoiceCorrector = InvoiceCorrector(invoiceService = invoiceService, customerService = customerService, currencyConverter = converter)
     val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
     val taskCreator = TaskCreator(billingService = billingService, invoiceService = invoiceService)
 

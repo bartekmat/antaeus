@@ -7,14 +7,14 @@ import java.util.*
 class InvoiceCorrector(
         private val customerService: CustomerService,
         private val invoiceService: InvoiceService,
-        private val converter: Converter
+        private val currencyConverter: CurrencyConverter
 ) {
     fun getCorrectCopy(invoice: Invoice): Optional<Invoice> {
 
         val customer = customerService.fetch(invoice.customerId)
-        val convertedAmount = converter.convert(invoice.amount.currency, customer.currency, invoice.amount.value)
+        val convertedAmount = currencyConverter.convert(from = invoice.amount.currency, to = customer.currency, amount = invoice.amount.value)
         return if (convertedAmount.isPresent) {
-            val correctMoney = Money(convertedAmount.get(), customer.currency)
+            val correctMoney = convertedAmount.get()
             Optional.of(invoiceService.create(amount = correctMoney, customer = customer))
         } else Optional.empty()
     }
