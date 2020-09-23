@@ -63,19 +63,22 @@ class BillingServiceTest {
     }
 
     @Test
-    fun `will handle CurrencyException if thrown by payment provider`() {
+    fun `will call corrector if currency mismatch thrown by payment provider`() {
         //mocks for this scenario
         val provider = mockk<PaymentProvider> {
             every { charge(problemInvoice) } throws CurrencyMismatchException(1, 1)
+            every { charge(noProblemInvoice) } returns true
         }
         val invoiceService = mockk<InvoiceService>{
-            every { updateStatus(any(), any()) } returns problemInvoice
+            every { updateStatus(any(), any()) } returns noProblemInvoice
         }
         //mock injection
-        val billingService = BillingService(paymentProvider = paymentProvider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
+        val billingService = BillingService(paymentProvider = provider, invoiceCorrector = invoiceCorrector, invoiceService = invoiceService)
 
         //when
-        billingService.proceedSingleInvoice(problemInvoice)
+        val result = billingService.proceedSingleInvoice(problemInvoice)
+
+        assertFalse(result)
         verify(atLeast = 1) { invoiceCorrector.getCorrectCopy(any()) }
     }
 }

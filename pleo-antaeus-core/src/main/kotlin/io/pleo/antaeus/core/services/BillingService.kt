@@ -34,7 +34,7 @@ class BillingService(
 
     private fun chargeInvoice(invoice: Invoice): Boolean {
         try {
-            val success = RetryableCommand<Boolean>(3)
+            val success = RetryableCommand(3)
                     .run(Supplier { paymentProvider.charge(invoice) })
             if (!success) {
                 handleNoSufficientBalance(invoice.id)

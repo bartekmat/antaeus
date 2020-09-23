@@ -14,7 +14,7 @@ class RetryableCommandTest {
     private val expectedException = NetworkException()
     private val maxTries = 3
 
-    private val command = RetryableCommand<Boolean>(maxTries)
+    private val command = RetryableCommand(maxTries)
 
     @Test
     fun `will run once if no exception thrown`() {
@@ -38,7 +38,7 @@ class RetryableCommandTest {
             }
         }
         command.run(function)
-        verify(exactly = 2) { function.get() }
+        verify(exactly = 3) { function.get() }
     }
 
     @Test
@@ -54,17 +54,17 @@ class RetryableCommandTest {
             }
         }
         command.run(function)
-        verify(exactly = 3) { function.get() }
+        verify(exactly = 5) { function.get() }
     }
 
     @Test
     fun `will throw if exceedes number of tries`() {
-        val function = mockk<Supplier<Boolean>>() {
+        val function = mockk<Supplier<Boolean>> {
             every { get() } throws expectedException
         }
         assertThrows<MultipleNetworkException> {
             command.run(function)
-            verify(exactly = 4) { function.get() }
+            verify(exactly = 3) { function.get() }
         }
     }
 
