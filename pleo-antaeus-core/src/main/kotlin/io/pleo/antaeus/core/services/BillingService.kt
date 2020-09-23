@@ -17,8 +17,10 @@ class BillingService(
 ) {
 
     fun proceedAllPendingInvoices(invoices: List<Invoice>) {
-        invoices.stream().limit(10).forEach { proceedSingleInvoice(it) }
-        //TODO: here instead of iterating and fired they should be iterated and put on the queue
+        invoices.stream().forEach { proceedSingleInvoice(it) }
+        /*
+            HERE IDEALLY ALL FETCHED INVOICES SHOULD BE PUT ON A QUEUE - FOR NOW I ONLY ITERATE
+        */
     }
 
     fun proceedSingleInvoice(invoice: Invoice): Boolean {
