@@ -12,10 +12,12 @@ Welcome to our challenge.
 
 As most "Software as a Service" (SaaS) companies, Pleo needs to charge a subscription fee every month. Our database contains a few invoices for the different markets in which we operate. Your task is to build the logic that will schedule payment of those invoices on the first of the month. While this may seem simple, there is space for some decisions to be taken and you will be expected to justify them.
 
+---
+
 # The Solution
 ## Time spent
 
-I worked on my solution heavily on the span of 4 days. I estimate the total number of hours spent reading documentation, doing research, writting code and testing to 40-45
+I worked on my solution heavily on the span of 4 days. I estimate the total number of hours spent reading documentation, doing research, writting code and testing to 40-45. This was one of my first chances to play around with Kotlin - I had lots of fun with it, but I am aware that many of its specific advantages were probably not used to the extent they could have been :) 
 
 ## Initial assumptions
 
