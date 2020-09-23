@@ -17,7 +17,7 @@ class BillingService(
 ) {
 
     fun proceedAllPendingInvoices(invoices: List<Invoice>) {
-        invoices.forEach { proceedSingleInvoice(it) }
+        invoices.stream().limit(10).forEach { proceedSingleInvoice(it) }
         //TODO: here instead of iterating and fired they should be iterated and put on the queue
     }
 
@@ -32,12 +32,10 @@ class BillingService(
 
     private fun chargeInvoice(invoice: Invoice): Boolean {
         try {
-            val success = RetryableCommand<Boolean>(maxRetries = 3)
-                    .run(Supplier {
-                        paymentProvider.charge(invoice)
-                    })
+            val success = RetryableCommand<Boolean>(3)
+                    .run(Supplier { paymentProvider.charge(invoice) })
             if (!success) {
-                handleNoMoney(invoice.id)
+                handleNoSufficientBalance(invoice.id)
                 return false
             }
         } catch (exception: Exception) {
@@ -48,39 +46,48 @@ class BillingService(
     }
 
     private fun handleException(exception: Exception, id: Int) {
+        Logger.log.info { exception.message }
         when (exception) {
-            is MultipleNetworkException -> handleFailedRetry(id)
-            is EntityNotFoundException -> handleNoCustomerFound(id)
             is CurrencyMismatchException -> handleCurrencyMismatch(id)
+            is EntityNotFoundException -> handleWrongCustomerOnInvoice(id)
+            is MultipleNetworkException -> handleConnectionToProviderLost(id)
         }
-    }
-
-    private fun handleFailedRetry(id: Int) {
-        Logger.log.info { "failed to proceed - retry number exceeded" }
-        invoiceService.updateStatus(id, InvoiceStatus.FAILED)
-        //TODO: here we could not execute despite several tries - pass to external service to check/reschedule
     }
 
     private fun handleCurrencyMismatch(id: Int) {
-        Logger.log.info { "Invoice $id has currency mismatch. Fallback - cancel > evaluate > prepare new" }
         val wrongInvoice = invoiceService.updateStatus(id, InvoiceStatus.FAILED)
-        val correctedInvoice= invoiceCorrector.getCorrectCopy(wrongInvoice)
-        if (correctedInvoice.isPresent){
+        val correctedInvoice = invoiceCorrector.getCorrectCopy(wrongInvoice)
+        if (correctedInvoice.isPresent) {
             proceedSingleInvoice(correctedInvoice.get())
         }
-        //TODO: here we could not execute despite several tries - pass to external service to check
     }
 
-    private fun handleNoCustomerFound(id: Int) {
-        Logger.log.info { "Invoice $id not proceeded, such customer was not found in DB" }
+    private fun handleWrongCustomerOnInvoice(id: Int) {
+        /*
+            THIS SHOULD PASS THE INVOICE TO EXTERNAL SERVICE THAT SOLVES THE CASE
+
+            Seems to be unsolvable problem - generate rapport
+        */
         invoiceService.updateStatus(id, InvoiceStatus.FAILED)
-        //TODO: invoice is invalid, customer does not exist, no way to find him - call external service to proceed with the situation
     }
 
-    private fun handleNoMoney(id: Int) {
+    private fun handleConnectionToProviderLost(id: Int) {
+        /*
+            THIS SHOULD PASS THE INVOICE TO EXTERNAL SERVICE THAT SOLVES THE CASE
+
+
+        */
+        invoiceService.updateStatus(id, InvoiceStatus.FAILED)
+    }
+
+    private fun handleNoSufficientBalance(id: Int) {
+        /*
+            THIS SHOULD PASS THE INVOICE TO EXTERNAL SERVICE THAT SOLVES THE CASE
+
+            Could for example suspend the subscription or send some notification to customer or/and accounting department
+        */
         Logger.log.info { "Not managed to charge invoice $id , customer account balance did not allow the charge" }
         invoiceService.updateStatus(id, InvoiceStatus.CUSTOMER_HAD_NO_MONEY)
-        //TODO: external service can suspend subscription and/or send email to customer - call external service
     }
 }
 

@@ -6,25 +6,17 @@ import io.pleo.antaeus.core.logger.Logger
 import java.util.function.Supplier
 
 class RetryableCommand<T>(
-        private val maxRetries: Int,
+        private val maxTries: Int,
         private var tryCounter: Int = 1
 ) {
     fun run(function: Supplier<T>): T {
-        try {
-            return function.get()
-        } catch (exception: NetworkException) {
-            return retry(function)
-        }
-    }
-
-    private fun retry(function: Supplier<T>): T {
-        Logger.log.error { "Task unsuccessful due to network exception" }
-        while (tryCounter <= maxRetries) {
+        while (tryCounter <= maxTries) {
             try {
                 return function.get()
             } catch (exception: NetworkException) {
+                Logger.log.error { "Task unsuccessful due to network exception - $tryCounter try failed" }
                 tryCounter++
-                Logger.log.error { "Task unsuccessful due to network exception - " + tryCounter + " try failed" }
+                run(function)
             }
         }
         throw MultipleNetworkException()
