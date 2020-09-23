@@ -27,7 +27,7 @@ class BillingService(
         val charged: Boolean = chargeInvoice(invoice)
         if (charged) {
             invoiceService.updateStatus(invoice.id, InvoiceStatus.PAID)
-            Logger.log.info { "Invoice " + invoice.id + " successfully charged " + invoice.amount.value.toInt() + " " + invoice.amount.currency }
+            Logger.log.info { "Invoice " + invoice.id + " successfully charged " + invoice.amount.value.toDouble() + " " + invoice.amount.currency }
         }
         return charged
     }

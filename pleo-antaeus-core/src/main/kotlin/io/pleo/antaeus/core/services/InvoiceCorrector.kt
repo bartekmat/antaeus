@@ -12,7 +12,7 @@ class InvoiceCorrector(
 ) {
     fun getCorrectCopy(invoice: Invoice): Optional<Invoice> {
 
-        val customer = customerService.fetch(invoice.id)
+        val customer = customerService.fetch(invoice.customerId)
         return if (customer.isPresent) {
             getCorrectedInvoice(invoice, customer.get())
         } else Optional.empty()

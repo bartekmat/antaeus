@@ -11,14 +11,18 @@ class CurrencyConverter(
 ) {
     fun convert(from: Currency, to: Currency, amount: BigDecimal): Optional<Money> {
         val exchangeRate = rateProvider.getExchangeRateBetween(from, to)
-        return if(exchangeRate.isPresent){
+        return if (exchangeRate.isPresent) {
             val convertedAmount = calculateConversion(from, to, amount, exchangeRate.get())
+            Logger.log.info { "Converted " + amount.toDouble() + " " + from + " to " + to }
             Optional.of(Money(convertedAmount, to))
-        }else Optional.empty()
+        } else {
+            Logger.log.info { "Conversion from $from to $to failed" }
+            Optional.empty()
+        }
 
     }
-    private fun calculateConversion(from: Currency, to: Currency, amount: BigDecimal, exchangeRate: Double): BigDecimal{
-        Logger.log.info { "converted " + amount.toDouble() + " " + from + " to " + to }
+
+    private fun calculateConversion(from: Currency, to: Currency, amount: BigDecimal, exchangeRate: Double): BigDecimal {
         return amount.multiply(BigDecimal.valueOf(exchangeRate))
     }
 }
