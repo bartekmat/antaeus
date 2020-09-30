@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -16,8 +17,8 @@ class CustomerServiceTest {
 
     @Test
     fun `will throw if customer is not found`() {
-        assertThrows<CustomerNotFoundException> {
-            customerService.fetch(404)
+        assertTrue {
+            customerService.fetch(404).isEmpty
         }
     }
 }
