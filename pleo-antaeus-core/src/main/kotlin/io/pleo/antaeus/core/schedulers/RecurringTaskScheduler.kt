@@ -1,6 +1,7 @@
 package io.pleo.antaeus.core.schedulers
 
 import io.pleo.antaeus.core.tasks.RecurringTask
+import kotlinx.coroutines.Job
 import org.quartz.*
 import org.quartz.JobBuilder.newJob
 import org.quartz.impl.StdSchedulerFactory
@@ -11,7 +12,7 @@ class RecurringTaskScheduler (
         private val cron: CronScheduleBuilder? = CronScheduleBuilder.monthlyOnDayAndHourAndMinute(1,0,0),
         private val job: JobDetail = newJob(RecurringTask::class.java).withIdentity("monthlyTask", "group1").build()
 ) {
-    fun scheduleMonthly(function: Supplier<Unit>) {
+    fun scheduleMonthly(function: Supplier<Job>) {
         scheduler.start()
 
         val jobDataMap = JobDataMap()
@@ -19,8 +20,9 @@ class RecurringTaskScheduler (
 
         val trigger: Trigger = TriggerBuilder.newTrigger()
                 .withIdentity("monthlyTrigger")
-                .withSchedule(cron)
-                //for manual testing - every minute .withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * 1/1 * ? *"))
+                //.withSchedule(cron)
+                //for manual testing - every minute
+                .withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * 1/1 * ? *"))
                 .usingJobData(jobDataMap)
                 .forJob(job)
                 .build()

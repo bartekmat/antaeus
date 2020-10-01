@@ -8,7 +8,10 @@ import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.logger.Logger
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.function.Supplier
+import java.util.stream.Collectors
 
 class BillingService(
         private val invoiceService: InvoiceService,
@@ -16,14 +19,19 @@ class BillingService(
         private val invoiceCorrector: InvoiceCorrector
 ) {
 
-    fun proceedAllPendingInvoices(invoices: List<Invoice>) {
-        invoices.stream().forEach { proceedSingleInvoice(it) }
+    fun proceedAllPendingInvoices(invoices: List<Invoice>) = GlobalScope.launch {
+        val start = System.nanoTime()
+        val jobList = invoices.stream().map { invoice -> GlobalScope.launch { proceedSingleInvoice(invoice) } }.collect(Collectors.toList())
+        jobList.forEach { it.join() }
+        val end = System.nanoTime()
+        println(end - start)
         /*
             HERE IDEALLY ALL FETCHED INVOICES SHOULD BE PUT ON A QUEUE - FOR NOW I ONLY ITERATE
         */
     }
 
-    fun proceedSingleInvoice(invoice: Invoice): Boolean {
+
+    suspend fun proceedSingleInvoice(invoice: Invoice): Boolean {
         val charged: Boolean = chargeInvoice(invoice)
         if (charged) {
             invoiceService.updateStatus(invoice.id, InvoiceStatus.PAID)
@@ -60,7 +68,7 @@ class BillingService(
         val wrongInvoice = invoiceService.updateStatus(id, InvoiceStatus.FAILED)
         val correctedInvoice = invoiceCorrector.getCorrectCopy(wrongInvoice)
         if (correctedInvoice.isPresent) {
-            proceedSingleInvoice(correctedInvoice.get())
+            GlobalScope.launch { proceedSingleInvoice(correctedInvoice.get()) }
         }
     }
 
