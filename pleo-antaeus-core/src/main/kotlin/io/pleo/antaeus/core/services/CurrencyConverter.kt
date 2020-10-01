@@ -12,7 +12,7 @@ class CurrencyConverter(
     fun convert(from: Currency, to: Currency, amount: BigDecimal): Optional<Money> {
         val exchangeRate = rateProvider.getExchangeRateBetween(from, to)
         return if (exchangeRate.isPresent) {
-            val convertedAmount = calculateConversion(from, to, amount, exchangeRate.get())
+            val convertedAmount = calculateConversion(amount, exchangeRate.get())
             Logger.log.info { "Converted " + amount.toDouble() + " " + from + " to " + to }
             Optional.of(Money(convertedAmount, to))
         } else {
@@ -22,7 +22,7 @@ class CurrencyConverter(
 
     }
 
-    private fun calculateConversion(from: Currency, to: Currency, amount: BigDecimal, exchangeRate: Double): BigDecimal {
+    private fun calculateConversion(amount: BigDecimal, exchangeRate: Double): BigDecimal {
         return amount.multiply(BigDecimal.valueOf(exchangeRate))
     }
 }
